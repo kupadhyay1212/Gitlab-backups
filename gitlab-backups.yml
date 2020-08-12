@@ -1,0 +1,53 @@
+1. locate backup path
+root@gitlab:/etc/gitlab# cat /etc/gitlab/gitlab.rb | grep backup_path
+# gitlab_rails['manage_backup_path'] = true
+# gitlab_rails['backup_path'] = "/var/opt/gitlab/backups"
+
+1. Create the backup dir 
+i.for gitlab install in docker docker 
+<< docker exec -it gitlab-web gitlab-rake gitlab:backup:create
+
+ii. for gitlab install without docker , it as services
+gitlab-rake gitlab:backup:create
+
+3. go to the backups dir and check the created backups tar file
+ls -la /var/opt/gitlab/backups
+
+4. stop the git lab services
+# From Gitlab docker 
+<< docker exec -it gitlab-web gitlab-ctl reconfigure
+<< docker exec -it gitlab-web gitlab-ctl start
+<< docker exec -it gitlab-web gitlab-ctl stop unicorn
+<< docker exec -it gitlab-web gitlab-ctl stop sidekiq
+<< docker exec -it gitlab-web gitlab-ctl stop
+<< docker exec -it gitlab-web gitlab-ctl status
+
+#for gitlab as services install
+gitlab-ctl reconfigure
+gitlab-ctl start
+gitlab-ctl stop unicorn
+gitlab-ctl stop sidekiq
+gitlab-ctl stop
+gitlab-ctl status
+ 
+4. Backup and restore Gitlab in docker
+#for gitlab install in  docker
+<< docker exec -it gitlab-web gitlab-rake gitlab:backup:restore BACKUP=1597209050_2020_08_12_11.2.1 --trace
+
+#for gitlab as services install
+<< gitlab-rake gitlab:backup:restore BACKUP=1597209050_2020_08_12_11.2.1 --trace
+
+5. Restart Gitlab with sanity check
+<< docker exec -it gitlab-web gitlab-ctl start
+<< docker exec -it gitlab-web gitlab-ctl status
+
+# for docker sanity-check
+<< docker exec -it gitlab-web gitlab-rake gitlab:check SANITIZE=true
+
+#for gitlab as services sanity-check
+<< gitlab-rake gitlab:check SANITIZE=true
+
+6. check the health of gitlab-web container 
+<< docker ps
+
+# referrence https://copdips.com/2018/09/backup-and-restore-gitlab-in-docker.html#upload-backups-to-remote-storage
